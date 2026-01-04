@@ -1,5 +1,17 @@
 {
   "mcpServers": {
+    "supabase": {
+      "type": "http",
+      "url": "https://mcp.supabase.com/mcp?read_only=true"
+    },
+    "playwright": {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "@executeautomation/playwright-mcp-server"
+      ],
+      "env": {}
+    },
     "brave-search": {
       "type": "stdio",
       "command": "npx",
@@ -18,6 +30,25 @@
         "hivemind-mcp@latest"
       ],
       "env": {}
+    },
+    "ios-automation": {
+      "type": "stdio",
+      "command": "node",
+      "args": [
+        "/Users/admin/mcp-ios-automation/dist/index.js"
+      ],
+      "env": {},
+      "comment": "Update path to your local mcp-ios-automation installation"
+    },
+    "n8n": {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "n8n-mcp"
+      ],
+      "env": {
+        "MCP_MODE": "stdio"
+      }
     }
   }
 }

@@ -118,6 +118,7 @@ class ClaudeCodeSession:
             "--print",
             "--output-format", "stream-json",
             "--verbose",
+            "--model", "sonnet",  # Force Sonnet 4.5 (not Haiku)
             "--mcp-config", ".mcp.json",  # Load project MCP servers
             "--setting-sources", "user,project",  # Load CLAUDE.md from both scopes
             "--chrome",  # Enable browser automation via Chrome extension
