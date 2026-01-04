@@ -1,0 +1,23 @@
+{
+  "mcpServers": {
+    "brave-search": {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "-y",
+        "@brave/brave-search-mcp-server"
+      ],
+      "env": {
+        "BRAVE_API_KEY": "YOUR_BRAVE_API_KEY_HERE"
+      }
+    },
+    "hivemind": {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "hivemind-mcp@latest"
+      ],
+      "env": {}
+    }
+  }
+}

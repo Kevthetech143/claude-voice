@@ -1,0 +1,19 @@
+# Core dependencies
+anthropic>=0.40.0
+openai>=1.0.0
+elevenlabs>=1.0.0
+pyaudio>=0.2.14
+aiohttp>=3.9.0
+
+# Testing
+pytest>=8.0.0
+pytest-asyncio>=0.23.0
+pytest-mock>=3.12.0
+
+# Utilities
+python-dotenv>=1.0.0
+structlog>=24.0.0
+pydantic>=2.0.0
+
+# Optional (wake word - Phase 2)
+# pvporcupine>=3.0.0
