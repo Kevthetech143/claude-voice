@@ -20,7 +20,7 @@ except ImportError:
 
 from src.llm.claude_code_session import ClaudeCodeSession
 from src.stt.whisper_local import LocalWhisperSTT
-from src.tts.macos_say import MacOSSayTTS
+from src.tts.piper_tts import PiperTTS
 from src.audio.types import AudioData, AudioFormat
 from src.core.events import InMemoryEventObserver
 from src.wake.wake_word import WakeWordDetector
@@ -128,7 +128,7 @@ async def voice_assistant():
 
     print("\n🎯 How it works:")
     print("  1. Say 'hey jarvis' to activate")
-    print("  2. Speak your question (5 seconds)")
+    print("  2. Speak your question (8 seconds)")
     print("  3. Claude transcribes + responds (text + voice)")
     print("  4. Returns to listening mode")
     print("  5. Press Ctrl+C to exit")
@@ -145,14 +145,14 @@ async def voice_assistant():
     # Create components
     observer = InMemoryEventObserver()
 
-    mic = MicrophoneCapture(duration_seconds=5)
+    mic = MicrophoneCapture(duration_seconds=8)
     stt = LocalWhisperSTT(model_name="small", observer=observer)
     llm = ClaudeCodeSession(
         system_message="You are Claude, a helpful voice assistant. Be concise and friendly.",
         observer=observer,
         timeout_seconds=180  # 3 minutes for Chrome automation tasks (navigation, page loads, form filling)
     )
-    tts = MacOSSayTTS(voice="Samantha")
+    tts = PiperTTS(model_quality="high")  # Jarvis voice from Iron Man (highest quality)
 
     print(f"\n✅ Session: {llm.session_id[:8]}...\n")
 
