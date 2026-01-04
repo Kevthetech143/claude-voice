@@ -165,6 +165,10 @@ async def voice_assistant():
         print("🎯 Wake word detected!")
 
         try:
+            # Audio acknowledgment - Jarvis says "Yes sir"
+            print("🔊 Jarvis: Yes sir")
+            await tts.speak("Yes sir", observer=observer)
+
             # 1. Capture audio
             audio = await mic.capture()
 
