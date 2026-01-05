@@ -27,21 +27,23 @@ from src.wake.wake_word import WakeWordDetector
 
 
 class MicrophoneCapture:
-    """Simple microphone capture using PyAudio"""
+    """Microphone capture with VAD-based auto-stop"""
 
-    def __init__(self, duration_seconds: int = 5):
+    def __init__(self, silence_duration: float = 2.0, max_duration: float = 30.0):
         """
         Args:
-            duration_seconds: How long to record (default: 5s)
+            silence_duration: Seconds of silence before stopping (default: 2.0s)
+            max_duration: Maximum recording duration in seconds (default: 30s)
         """
-        self.duration = duration_seconds
+        self.silence_duration = silence_duration
+        self.max_duration = max_duration
         self.sample_rate = 16000
         self.channels = 1
         self.chunk_size = 1024
 
     async def capture(self) -> AudioData:
-        """Record audio from microphone"""
-        print(f"🎤 Recording for {self.duration} seconds... SPEAK NOW!")
+        """Record audio from microphone until silence detected"""
+        print(f"🎤 Recording... (stops after {self.silence_duration}s of silence, max {self.max_duration}s)")
 
         # Run in thread pool to avoid blocking
         loop = asyncio.get_event_loop()
@@ -61,7 +63,7 @@ class MicrophoneCapture:
         )
 
     def _record(self) -> tuple[bytes, int]:
-        """Synchronous recording (runs in thread pool)
+        """Synchronous recording with VAD-based auto-stop (runs in thread pool)
 
         Returns:
             Tuple of (WAV audio bytes, total frame count)
@@ -69,6 +71,9 @@ class MicrophoneCapture:
         import pyaudio
         import wave
         import io
+        import numpy as np
+        import time
+        from openwakeword.vad import VAD
 
         try:
             p = pyaudio.PyAudio()
@@ -92,11 +97,46 @@ class MicrophoneCapture:
 
         try:
             frames = []
-            num_chunks = int(self.sample_rate / self.chunk_size * self.duration)
+            vad = VAD()
 
-            for _ in range(num_chunks):
+            # Timing
+            start_time = time.time()
+            silence_start = None
+
+            # Silence detection threshold
+            silence_threshold = 0.5  # Same as wake word detection
+
+            while True:
+                # Check max duration timeout
+                elapsed = time.time() - start_time
+                if elapsed > self.max_duration:
+                    print(f"⏱️ Max duration ({self.max_duration}s) reached")
+                    break
+
+                # Read audio chunk
                 data = stream.read(self.chunk_size, exception_on_overflow=False)
                 frames.append(data)
+
+                # Convert to numpy for VAD
+                audio_data = np.frombuffer(data, dtype=np.int16)
+
+                # Run VAD to detect speech
+                vad_result = vad.predict(audio_data, frame_size=512)
+                speech_prob = float(np.mean(vad_result)) if isinstance(vad_result, np.ndarray) else float(vad_result)
+
+                # Track silence duration
+                if speech_prob < silence_threshold:
+                    # Silence detected
+                    if silence_start is None:
+                        silence_start = time.time()
+                    else:
+                        silence_duration = time.time() - silence_start
+                        if silence_duration >= self.silence_duration:
+                            print(f"🤫 Silence detected ({self.silence_duration}s), stopping...")
+                            break
+                else:
+                    # Speech detected - reset silence timer
+                    silence_start = None
 
         finally:
             # Always cleanup, even on error
@@ -128,7 +168,7 @@ async def voice_assistant():
 
     print("\n🎯 How it works:")
     print("  1. Say 'hey jarvis' to activate")
-    print("  2. Speak your question (8 seconds)")
+    print("  2. Speak your question (auto-stops after 2s of silence)")
     print("  3. Claude transcribes + responds (text + voice)")
     print("  4. Returns to listening mode")
     print("  5. Press Ctrl+C to exit")
@@ -145,7 +185,7 @@ async def voice_assistant():
     # Create components
     observer = InMemoryEventObserver()
 
-    mic = MicrophoneCapture(duration_seconds=8)
+    mic = MicrophoneCapture(silence_duration=2.0, max_duration=30.0)
     stt = LocalWhisperSTT(model_name="small", observer=observer)
     llm = ClaudeCodeSession(
         system_message="You are Claude, a helpful voice assistant. Be concise and friendly.",
