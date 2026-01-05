@@ -27,7 +27,7 @@ class WakeWordDetector:
         model_name: str = "hey_jarvis",
         threshold: float = 0.75,  # Balanced threshold (0.75) - provides 870% margin above max silence score (0.08)
         sample_rate: int = 16000,
-        chunk_duration_ms: int = 96  # 96ms = 1536 samples, divides evenly by VAD frame_size=512
+        chunk_duration_ms: int = 80  # 80ms = 1280 samples (openWakeWord requirement)
     ):
         """
         Initialize wake word detector
@@ -101,9 +101,9 @@ class WakeWordDetector:
 
                     # VAD (Voice Activity Detection) - filter non-speech audio
                     # This prevents false triggers from music, TV, typing, background noise
-                    # Uses frame_size=512 (32ms) - what Silero VAD was trained on
-                    # chunk_size=1536 divides evenly: 1536 ÷ 512 = 3 chunks
-                    vad_result = self.vad.predict(audio_data, frame_size=512)
+                    # Uses frame_size=640 (40ms) for clean division
+                    # chunk_size=1280 divides evenly: 1280 ÷ 640 = 2 chunks
+                    vad_result = self.vad.predict(audio_data, frame_size=640)
                     speech_prob = float(np.mean(vad_result)) if isinstance(vad_result, np.ndarray) else float(vad_result)
 
                     # Only run wake word detection if speech detected
